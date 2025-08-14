@@ -18,12 +18,11 @@ namespace Jellyfin.Plugin.ThemeSongs.ScheduledTasks
             _logger = logger;
             _themeSongsManager = new ThemeSongsManager(libraryManager,  logger);
         }
-        public Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
+        public async Task Execute(CancellationToken cancellationToken, IProgress<double> progress)
         {
             _logger.LogInformation("Starting plugin, Downloading TV Theme Songs...");
-            _themeSongsManager.DownloadAllThemeSongs();
+            await _themeSongsManager.DownloadAllThemeSongs();
             _logger.LogInformation("All theme songs downloaded");
-            return Task.CompletedTask;
         }
 
         public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)

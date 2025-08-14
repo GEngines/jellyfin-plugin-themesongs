@@ -34,6 +34,56 @@ This is a fork of the <a href="https://github.com/danieladov/jellyfin-plugin-the
    - In the plugin settings, you can specify a custom directory to store all your theme songs.
    - Enable "Use custom path exclusively" if you only want theme songs to be found in the custom path.
    - When disabled, the plugin will fall back to searching in the TV series folders if a theme is not found in the custom path.
+   
+## Changing Theme Directory
+
+There are several ways to set up a custom theme songs directory:
+
+### Using the Plugin Settings
+1. Go to the plugin configuration page in Jellyfin
+2. Enter your desired path in the "Custom Theme Songs Path" field
+3. Click "Save Settings" 
+4. Click "Download Theme Songs" to download themes to the new location
+
+### How the Custom Path Works
+
+When you configure a custom themes path:
+
+1. **Theme Storage**: All theme songs will be downloaded to and stored in your custom path
+2. **Theme Detection**: 
+   - When you enable "Use custom path exclusively", the plugin will only look for themes in your custom path
+   - Otherwise, it will check your custom path first, then fall back to series folders
+3. **Jellyfin Integration**:
+   - The plugin maintains a mapping between series and their theme songs
+   - This approach works with read-only media directories (like Docker containers)
+   - No writing to media directories is required
+   - Themes are stored only in your custom path and served directly from there
+
+### Using Environment Variable
+You can set the `JELLYFIN_THEME_SONGS_PATH` environment variable to override the theme path:
+
+**For Docker:**
+```
+-e JELLYFIN_THEME_SONGS_PATH=/path/to/themes
+```
+
+**For systemd:**
+```bash
+# Edit the service file
+sudo systemctl edit jellyfin.service
+# Add the following line
+Environment="JELLYFIN_THEME_SONGS_PATH=/path/to/themes"
+# Restart Jellyfin
+sudo systemctl restart jellyfin
+```
+
+### Using the Setup Script
+Run the included setup script to configure the theme path:
+```bash
+chmod +x setup_theme_link.sh
+sudo ./setup_theme_link.sh
+```
+Edit the script first to set your desired path.
 
 
 

@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Theme Songs</title>
+    <title>Advanced Theme Songs</title>
 </head>
 
 <body>
@@ -14,7 +14,7 @@
                     <div class="sectionTitleContainer flex align-items-center">
                         <h2 class="sectionTitle">Theme Songs</h2>
                         <a is="emby-linkbutton" class="raised button-alt headerHelpButton emby-button" target="_blank"
-                            href="https://github.com/danieladov/jellyfin-plugin-themesongs">Help</a>
+                            href="https://github.com/GEngines/jellyfin-plugin-themesongs">Help</a>
                     </div>
                     <div class="verticalSection">
                         <p>This plugin relies on the TVDB provider
@@ -43,6 +43,16 @@
                             If checked, only look for theme songs in the custom path. Otherwise, fallback to series folders.
                         </div>
                     </div>
+                    
+                    <br />
+                    <div class="sliderContainer">
+                        <label for="themeVolume" class="sliderLabel">Theme Song Volume</label>
+                        <input is="emby-slider" type="range" id="themeVolume" name="themeVolume" 
+                               min="0" max="100" step="5" class="emby-slider" />
+                        <div class="fieldDescription">
+                            Set the default playback volume for theme songs (20% recommended).
+                        </div>
+                    </div>
 
                     <script>
                         var ThemeSongsConfig = {
@@ -55,6 +65,7 @@
                             ApiClient.getPluginConfiguration(ThemeSongsConfig.pluginId).then(function (config) {
                                 document.querySelector('#customThemeSongsPath').value = config.CustomThemeSongsPath || '';
                                 document.querySelector('#useCustomPathExclusively').checked = config.UseCustomPathExclusively || false;
+                                document.querySelector('#themeVolume').value = config.ThemeVolume || 20;
                                 
                                 Dashboard.hideLoadingMsg();
                             });
@@ -68,6 +79,7 @@
                                 // Update with new values
                                 config.CustomThemeSongsPath = document.querySelector('#customThemeSongsPath').value;
                                 config.UseCustomPathExclusively = document.querySelector('#useCustomPathExclusively').checked;
+                                config.ThemeVolume = parseInt(document.querySelector('#themeVolume').value) || 20;
                                 
                                 // Save the configuration
                                 ApiClient.updatePluginConfiguration(ThemeSongsConfig.pluginId, config).then(function () {
@@ -97,7 +109,7 @@
         </div>
 
         <div class="fieldDescription" style="margin-top: 1em;">
-            Theme Songs Plugin v1.1.1.0 - Custom Paths Edition
+            Theme Songs Plugin v1.1.2.0 - Custom Paths Edition
         </div>
 
         <script type="text/javascript">
@@ -115,6 +127,31 @@
                     });
                 });
             }
+            
+            // Add script to the main Jellyfin UI to control theme volume
+            function injectVolumeControlScript() {
+                // Don't inject multiple times
+                if (window.themeSongsVolumeInjected) return;
+                window.themeSongsVolumeInjected = true;
+                
+                // Get the volume setting from config
+                ApiClient.getPluginConfiguration('afe1de9c-63e4-4692-8d8c-7c964df19eb2').then(function (config) {
+                    // Create volume control script
+                    var script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = ApiClient.getUrl('/ThemeSongs/VolumeControl.js');
+                    document.head.appendChild(script);
+                    console.log('Theme Songs volume control script injected');
+                });
+            }
+            
+            // Run once when loading the admin page
+            injectVolumeControlScript();
+            
+            // Also inject when navigating back to the main UI
+            document.addEventListener('viewshow', function(e) {
+                setTimeout(injectVolumeControlScript, 1000);
+            });
         </script>
     </div>
 </body>

@@ -7,6 +7,8 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using Jellyfin.Plugin.ThemeSongs.Configuration;
+using System.IO;
+using System.Reflection;
 
 namespace Jellyfin.Plugin.ThemeSongs.Api
 {
@@ -74,6 +76,41 @@ namespace Jellyfin.Plugin.ThemeSongs.Api
             catch (Exception ex)
             {
                 return BadRequest($"Error saving configuration: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Gets the theme volume control JavaScript with the configured volume.
+        /// </summary>
+        /// <returns>JavaScript file with embedded volume setting.</returns>
+        [HttpGet("VolumeControl.js")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [Produces("application/javascript")]
+        public ActionResult GetThemeVolumeControlScript()
+        {
+            try
+            {
+                // Get the configured volume
+                var config = Plugin.Instance.Configuration;
+                int volume = config.ThemeVolume;
+                
+                // Read the base JavaScript file
+                string path = Path.Combine(
+                    Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
+                    "Api", 
+                    "theme-volume-control.js");
+                
+                string js = System.IO.File.ReadAllText(path);
+                
+                // Replace the volume placeholder with the configured value
+                js = js.Replace("window.ThemeSongsVolume || 20", $"window.ThemeSongsVolume || {volume}");
+                
+                return Content(js, "application/javascript");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error serving theme volume control script");
+                return StatusCode(500, "Error serving theme control script");
             }
         }
     }

@@ -26,9 +26,11 @@ namespace Jellyfin.Plugin.ThemeSongs.ScheduledTasks
             return Task.CompletedTask;
         }
 
-        public Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
+        public async Task ExecuteAsync(IProgress<double> progress, CancellationToken cancellationToken)
         {
-            return Execute(cancellationToken, progress);
+            _logger.LogInformation("Starting plugin, Downloading TV Theme Songs...");
+            await _themeSongsManager.DownloadAllThemeSongs();
+            _logger.LogInformation("All theme songs downloaded");
         }
 
         public IEnumerable<TaskTriggerInfo> GetDefaultTriggers()

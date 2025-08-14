@@ -4,6 +4,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
+using Jellyfin.Plugin.ThemeSongs.Configuration;
 
 namespace Jellyfin.Plugin.ThemeSongs.Api
 {
@@ -38,15 +41,40 @@ namespace Jellyfin.Plugin.ThemeSongs.Api
         /// <returns>A <see cref="NoContentResult"/> indicating success.</returns>
         [HttpPost("DownloadTVShows")]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        public ActionResult DownloadTVThemeSongsRequest()
+        public async Task<ActionResult> DownloadTVShows()
         {
             _logger.LogInformation("Downloading TV Theme Songs");
-            _themeSongsManager.DownloadAllThemeSongs();
+            await _themeSongsManager.DownloadAllThemeSongs();
             _logger.LogInformation("Completed");
             return NoContent();
         }
 
-        
-
+        /// <summary>
+        /// Updates the plugin configuration.
+        /// </summary>
+        /// <param name="configuration">The new configuration settings.</param>
+        /// <returns>A <see cref="NoContentResult"/> indicating success.</returns>
+        [HttpPost("Configuration")]
+        [Authorize(Policy = "RequiresElevation")]
+        [Consumes(MediaTypeNames.Application.Json)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public ActionResult UpdateConfiguration([FromBody] PluginConfiguration configuration)
+        {
+            try
+            {
+                // Update the plugin configuration
+                Plugin.Instance.Configuration.CustomThemeSongsPath = configuration.CustomThemeSongsPath;
+                Plugin.Instance.Configuration.UseCustomPathExclusively = configuration.UseCustomPathExclusively;
+                
+                // Save configuration to disk
+                Plugin.Instance.SaveConfiguration();
+                
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest($"Error saving configuration: {ex.Message}");
+            }
+        }
     }
 }
